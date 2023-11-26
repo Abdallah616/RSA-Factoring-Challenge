@@ -1,60 +1,48 @@
-import sys
-import math
+#!/usr/bin/env bash
+#is a challenge
+check_factor()
+{
+	if [ $# -ne 3 ];
+        then
+                args=("$@")
+                count=0
+                num2=1
+                for a in ${args[*]};
+                do
+                        if [ $count -gt 1 ];
+                        then
+                                num2=$(echo $a*$num2 | bc)
+                        fi
+                        count=$((count + 1))
+                done
+        else
+                num2=$3
+        fi
 
-def is_prime(num):
-    if num < 2:
-        return False
-    for i in range(2, int(math.sqrt(num)) + 1):
-        if num % i == 0:
-            return False
-    return True
+        num1=$2
+        num=$(echo "$1" | tr ':' '=')
 
-def pollard_rho(n):
-    if n % 2 == 0:
-        return 2
+        result=$(echo "if($num2 > $num1) 1 else 0" | bc)
+	        if ((result == 1)); then
+		        numcp=$num1
+		        num1=$num2
+		        num2=$numcp
+                fi
 
-    x = 2
-    y = 2
-    d = 1
+        echo "$num$num1*$num2"
+}
 
-    f = lambda x: (x**2 + 1) % n
+if [ $# -ne 1 ]
+then
+        echo 'Usage: rsa <file>'
+        exit 1
+else
 
-    while d == 1:
-        x = f(x)
-        y = f(f(y))
-        d = math.gcd(abs(x - y), n)
+        while read i
+        do
 
-    return d
+                result=$(factor "$i")
+                check_factor $result
 
-def factorize_rsa(n):
-    factors = []
-
-    while n % 2 == 0:
-        factors.append(2)
-        n //= 2
-
-    while n > 1 and not is_prime(n):
-        factor = pollard_rho(n)
-        factors.append(factor)
-        n //= factor
-
-    if is_prime(n):
-        factors.append(n)
-
-    return factors
-
-def main(file_path):
-    with open(file_path, 'r') as file:
-        numbers = [int(line.strip()) for line in file]
-
-    for num in numbers:
-        factors = factorize_rsa(num)
-        print(f"{num}={'*'.join(map(str, factors))}")
-
-if __name__ == "__main__":
-    if len(sys.argv) != 2:
-        print("Usage: factors <file>")
-        sys.exit(1)
-
-    file_path = sys.argv[1]
-    main(file_path)
+        done < "$1"
+fi
